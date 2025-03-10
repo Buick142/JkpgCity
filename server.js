@@ -1,17 +1,37 @@
 const express = require('express');
-const db = require('./database.js');
-const { getAllStores } = require('./database.js');
+const { getAllStores, createTableStores } = require('./database.js');
 const cookieParser = require('cookie-parser');
+const path = require('path');
 const bcrypt = require('bcrypt');
 const app = express();
 const PORT = 3000;
 
-app.use(express.static('public'));
+// Middleware
+app.use(express.json());
+app.use(cookieParser());
 
-app.get('/api/stores', (req, res) => {
-    const stores = getAllStores();
-    res.json(stores);
-})
+// Ensure table Stores is created before running the database
+createTableStores();
+
+// API route to retrieve stores from the database
+app.get('/api/stores', async (req, res) => {
+
+    try {
+        const stores = await getAllStores();
+        res.json(stores); // Send JSON response from DB
+    } catch (err) {
+        console.error('Error fetching stores:', err);
+        res.status(500).send('Error retrieving store data');
+    }
+});
+
+// Serve static files
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Serve the homepage
+app.get('/public', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 app.get('/', (req, res) => {
     res.send('Server is running. Welcome to JkpgCity!');

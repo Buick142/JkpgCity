@@ -1,6 +1,6 @@
-const { Client } = require("pg");
+const { Pool } = require("pg");
 
-const client = new Client({
+const pool = new Pool({
     user: "postgres",
     host: "localhost",
     database: "postgres",
@@ -10,7 +10,7 @@ const client = new Client({
 
 async function connectDB() {
     try{
-        await client.connect();
+        await pool.connect();
         console.log('Connected to PostgreSQL database');
     } catch (err) {
         console.error('Connection error', err.stack);
@@ -25,9 +25,9 @@ function createTableStores() {
     url TEXT,
     district VARCHAR(255)
     );`;
-    client.query(createStoresQuery)
+    pool.query(createStoresQuery)
         .then(() => console.log('Table "Stores" created'))
-        .catch(err = console.error('Could not create table "Stores"', err.stack));
+        .catch(err => console.error('Could not create table "Stores"', err.stack));
 }
  
 async function getAllStores() {
@@ -41,4 +41,6 @@ async function getAllStores() {
     }
 }
 
-module.exports = { getAllStores };
+connectDB();
+
+module.exports = { getAllStores, createTableStores };
