@@ -1,23 +1,9 @@
-const { Client } = require("pg");
+const express = require('express');
+const db = require('./database.js')
 
-const client = new Client({
-    user: "postgres",
-    host: "localhost",
-    database: "postgres",
-    password: "1234",
-    port: 5432,
-});
+const app = express();
+const PORT = 3000;
 
-async function createDatabase() {
-    try {
-        await client.connect();
-        const result = await client.query("SELECT * FROM vendors");
-        console.log(result.rows);
-    } catch (err) {
-        console.error("Error creating database:", err);
-    } finally {
-        await client.end();
-    } 
-}
-
-createDatabase();
+app.listen(PORT, () => {
+    console.log(`Server listening on http://localhost:${PORT}`);
+}); 
