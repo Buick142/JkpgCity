@@ -1,11 +1,22 @@
-console.log(getAllStores());
+// console.log(getAllStores());
 
 document.addEventListener('DOMContentLoaded', async function () {
     const storeContainer = document.getElementById('store-container');
 
+    if (!storeContainer) {
+        console.error("Error: store-container element not found.");
+        return;
+    }
+
     // Fetch the store data from the server
     fetch('./api/stores')
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        response.json();
+    
+    })
     .then(data => {
         data.forEach(store => {
             const storeDiv = document.createElement('div');
