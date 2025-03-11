@@ -14,19 +14,18 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
-        response.json();
-    
+        return response.json(); 
     })
     .then(data => {
         data.forEach(store => {
             const storeDiv = document.createElement('div');
-            storeDiv.classList.add('store'); // Add a class for styling
+            storeDiv.classList.add('store'); // Class for styling
 
             // You can display the store's data in any way you want
             storeDiv.innerHTML = `
                 <h2>${store.name}</h2>
                 <p>Location: ${store.district}</p>
-                <a href="${store.url}" target='_blank'>Visit</a>
+                <a href="${store.url}" target="_blank">Visit</a>
             `;
 
             storeContainer.appendChild(storeDiv);

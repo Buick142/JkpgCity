@@ -1,5 +1,5 @@
 const express = require('express');
-const { getAllStores, createTableStores } = require('./database.js');
+const { getAllStores, createTableStores } = require('/database.js');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 const bcrypt = require('bcrypt');
@@ -15,14 +15,34 @@ createTableStores();
 
 // API route to retrieve stores from the database
 app.get('/api/stores', async (req, res) => {
-
     try {
         const stores = await getAllStores();
-        res.json(stores); // Send JSON response from DB
+        if (stores && stores.length > 0) {
+            return res.json(stores); // Send JSON response from DB
+        } else {
+            console.warn("Database empty. Using stores from json instead.");
+            throw new Error("No stores in DB.");
+        }
     } catch (err) {
         console.error('Error fetching stores:', err);
         res.status(500).send('Error retrieving store data');
     }
+
+    // Fallback to reading from stores.json
+    fs.readFile(path.join(__dirname, 'stores.json'), 'utf8', (fileErr, data) => {
+        if (fileErr) {
+            console.error('Error reading stores.json:', fileErr);
+            return res.status(500).json({ error: 'Error retrieving store data' });
+        }
+
+        try {
+            const stores = JSON.parse(data);
+            res.json(stores); // Send JSON from file
+        } catch (parseErr) {
+            console.error('Error parsing stores.json:', parseErr);
+            res.status(500).json({ error: 'Error parsing store data' });
+        }
+    });
 });
 
 // Serve static files
