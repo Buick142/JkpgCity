@@ -1,10 +1,11 @@
 const express = require('express');
-const { getAllStores, createTableStores } = require('/database.js');
+const { getAllStores, createTableStores } = require('./database.js');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 const bcrypt = require('bcrypt');
 const app = express();
 const PORT = 3000;
+const fs = require('fs');
 
 // Middleware
 app.use(express.json());
@@ -13,36 +14,100 @@ app.use(cookieParser());
 // Ensure table Stores is created before running the database
 createTableStores();
 
-// API route to retrieve stores from the database
+// Array of available district options
+const validDistricts = ["Väster", "Öster", "Tändsticksområdet", "Atollen", null];
+
+// API route setup to READ stores
 app.get('/api/stores', async (req, res) => {
     try {
         const stores = await getAllStores();
-        if (stores && stores.length > 0) {
+        if (stores.length > 0) {
             return res.json(stores); // Send JSON response from DB
-        } else {
-            console.warn("Database empty. Using stores from json instead.");
-            throw new Error("No stores in DB.");
-        }
+        } 
+        throw new Error("No stores in DB.");
+
+    // Use stores.json if database is not found
     } catch (err) {
-        console.error('Error fetching stores:', err);
-        res.status(500).send('Error retrieving store data');
+        console.warn("Database empty. Using stores.json instead.");
+
+        // Check if stores.json exists before reading
+        const jsonFilePath = path.join(__dirname, 'api', 'stores', 'stores.json');
+        if (!fs.existsSync(jsonFilePath)) {
+            console.error("stores.json not found!");
+            return res.status(500).json({ error: "stores.json file is missing" });
+        }
+
+        // Read JSON file
+        fs.readFile(jsonFilePath, 'utf8', (fileErr, data) => {
+            if (fileErr) {
+                console.error("Error reading stores.json:", fileErr);
+                return res.status(500).json({ error: "Failed to load stores.json" });
+            } try {
+                const stores = JSON.parse(data);
+                res.json(stores); // Send JSON file stores
+            } catch (parseErr) {
+                console.error("Error parsing stores.json:", parseErr);
+                res.status(500).json({ error: "Error parsing stores.json" });
+            }
+        });
     }
+});
 
-    // Fallback to reading from stores.json
-    fs.readFile(path.join(__dirname, 'stores.json'), 'utf8', (fileErr, data) => {
-        if (fileErr) {
-            console.error('Error reading stores.json:', fileErr);
-            return res.status(500).json({ error: 'Error retrieving store data' });
+// Send POST request to CREATE a store
+app.post('/api/stores', async (req, res) => {
+    const { name, url, district } = req.body;
+    if (!name) return res.status(400).json({ error: "Name is required" });
+
+    try {
+        await client.query('INSERT INTO Stores (name, url, district) VALUES ($1, $2, $3)', [name, url, district]);
+        res.status(201).json({ message: "Store added successfully" });
+    } catch (err) {
+        res.status(500).json({ error: "Failed to add store" });
+    }
+});
+
+// Send PUT request to UPDATE a store
+app.put('/api/stores/:id', async (req, res) => {
+    const { id } = req.params;
+    const { name, url, district } = req.body;
+
+    if (!name || !url || !validDistricts.includes(district)) {
+        return res.status(400).json({ error: "All fields are required" });
+    } 
+    
+    try {
+        const result = await client.query(
+            'UPDATE Stores SET name = $1, url = $2, district = $3 WHERE id = $4',
+            [name, url, district, id]
+        );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: "Store not found" });
         }
 
-        try {
-            const stores = JSON.parse(data);
-            res.json(stores); // Send JSON from file
-        } catch (parseErr) {
-            console.error('Error parsing stores.json:', parseErr);
-            res.status(500).json({ error: 'Error parsing store data' });
+        res.json({ message: "Store updated successfully" });
+    } catch (err) {
+        console.error("Error updating store:", err);
+        res.status(500).json({ error: "Failed to update store" });
+    }
+});
+
+// Send DELETE request to DELETE a store
+app.delete('/api/stores/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const result = await client.query('DELETE FROM Stores WHERE id = $1', [id]);
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: "Store not found" });
         }
-    });
+
+        res.json({ message: "Store deleted successfully" });
+    } catch (err) {
+        console.error("Error deleting store:", err);
+        res.status(500).json({ error: "Failed to delete store" });
+    }
 });
 
 // Serve static files

@@ -1,0 +1,24 @@
+#store-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#store-form {
+    margin-bottom: 10px;
+}
+
+.store {
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.store h2 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.store p {
+    margin: 5px 0;
+}

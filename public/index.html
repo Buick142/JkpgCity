@@ -7,6 +7,22 @@
     <link rel="stylesheet" href="main.css" />
 </head>
 <body>
+    <h1>Stores in the City</h1>
+
+    <h2>Add a Store:</h2>
+    <form id="store-form">
+        <input type="text" id="name" placeholder="Name of the store" required>
+        <input type="text" id="url" placeholder="Website" required>
+        <select id="district">
+            <option value="Select District">Select District</option>
+            <option value="Väster">Väster</option>
+            <option value="Öster">Öster</option>
+            <option value="Atollen">Atollen</option>
+            <option value="Tändsticksområdet">Tändsticksområdet</option>
+        </select>
+        <button type="submit">Add</button>
+    </form>
+
     <div id="store-container"></div>
     
     <script type="module" src="/frontend.js"></script>
