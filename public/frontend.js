@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', async function () {
+document.addEventListener('DOMContentLoaded', async function() {
     const storeContainer = document.getElementById('store-container');
     const storeForm = document.getElementById('store-form');
     const districtFilter = document.getElementById('district-filter');
@@ -22,14 +22,41 @@ document.addEventListener('DOMContentLoaded', async function () {
                     <h2>${store.name}</h2>
                     <p>Location: ${store.district || "Not specified"}</p>
                     <a href="${store.url}" target="_blank">Visit</a>
+                    <button type="button" class="delete-btn" data-id="${store.id}">Delete</button>
+                    <button type="button" class="edit-btn" data-id="${store.id}" data-name="${store.name}" data-url="${store.url}" data-district="${store.district || ''}">Edit</button>
                 `;
 
+                
                 storeContainer.appendChild(storeDiv);
+
+                attachEventListeners();
             })
         } catch (error) {
             console.error('Error fetching store data:', error);
             storeContainer.innerHTML = '<p>Failed to load store data.</p>';
         }
+    }
+
+    function attachEventListeners() {
+
+        const deleteButton = document.querySelectorAll('.delete-btn');
+        deleteButton.forEach(button => {
+            button.addEventListener('click', async (event) => {
+                const id = event.target.getAttribute('data-id');
+                await deleteStore(id);
+            });
+        });
+        
+        const editButton = document.querySelectorAll('.edit-btn');
+        editButton.forEach(button => {
+            button.addEventListener('click', async (event) => {
+                const id = event.target.getAttribute('data-id');
+                const name = event.target.getAttribute('data-name');
+                const url = event.target.getAttribute('data-url');
+                const district = event.target.getAttribute('data-district');
+                await editStore(id, name, url, district);
+            });
+        });  
     }
 
     storeForm.addEventListener("submit", async (event) => {
@@ -85,8 +112,22 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     window.deleteStore = async function (id) {
         if (confirm("Are you sure you want to delete this store?")) {
-            await fetch(`/api/stores/${id}`, { method: "DELETE" });
-            fetchStores();
+
+            try {
+                const deleteButton = document.querySelector(`[data-id="${id}"]`)
+                if (deleteButton) deleteButton.disabled = true;
+
+                const response = await fetch(`/api/stores/${id}`, { method: "DELETE" });
+
+                if (!response.ok) {
+                    throw new Error('Failed to delete store');
+                } 
+                fetchStores();
+
+            } catch (error) {
+                console.error('Error deleting store': error);
+                alert('Failed to delete store');
+            }
         }
     }
 

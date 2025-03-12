@@ -10,6 +10,7 @@ const pool = new Pool({
     port: 5432,
 });
 
+
 async function connectDB() {
     try{
         await pool.connect();

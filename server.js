@@ -67,8 +67,8 @@ app.post('/api/stores', async (req, res) => {
     try {
         const result = await pool.query('INSERT INTO Stores (name, url, district) VALUES ($1, $2, $3) RETURNING *', [name, url, district]);
         res.status(201).json({ 
-            message: 'Store added successfully', 
-            store: result.rows[0] 
+            store: result.rows[0] ,
+            message: 'Store added successfully' 
         });
     } catch (err) {
         res.status(500).json({ error: 'Failed to add store' });
@@ -93,7 +93,7 @@ app.put('/api/stores/:id', async (req, res) => {
             return res.status(404).json({ error: "Store not found" });
         }
 
-        res.json({ message: "Store updated successfully", store: result.rows[0] });
+        res.json({ store: result.rows[0] , message: "Store deleted successfully" });
     } catch (err) {
         console.error("Error updating store:", err);
         res.status(500).json({ error: "Failed to update store" });
@@ -111,7 +111,7 @@ app.delete('/api/stores/:id', async (req, res) => {
             return res.status(404).json({ error: "Store not found" });
         }
 
-        res.json(result.rows[0], { message: "Store deleted successfully" });
+        res.json({ store: result.rows[0] , message: "Store deleted successfully" });
     } catch (err) {
         console.error("Error deleting store:", err);
         res.status(500).json({ error: "Failed to delete store" });
