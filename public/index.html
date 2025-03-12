@@ -9,8 +9,19 @@
 <body>
     <h1>Stores in the City</h1>
 
+    <!-- Filter -->
+    <label for="filter-store">District:</label>
+    <select id="district-filter">
+        <option value="">All</option>
+        <option value="Väster">Väster</option>
+        <option value="Öster">Öster</option>
+        <option value="Atollen">Atollen</option>
+        <option value="Tändsticksområdet">Tändsticksområdet</option>
+    </select>
+
+    <!-- Add Store Form -->
     <h2>Add a Store:</h2>
-    <form id="store-form">
+    <form id="store-form" action="">
         <input type="text" id="name" placeholder="Name of the store" required>
         <input type="text" id="url" placeholder="Website" required>
         <select id="district">

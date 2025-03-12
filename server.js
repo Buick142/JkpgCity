@@ -1,5 +1,5 @@
 const express = require('express');
-const { getAllStores, createTableStores } = require('./database.js');
+const { getAllStores, createTableStores, pool } = require('./database.js');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 const bcrypt = require('bcrypt');
@@ -14,10 +14,10 @@ app.use(cookieParser());
 // Ensure table Stores is created before running the database
 createTableStores();
 
-// Array of available district options
+// Array of valid district options
 const validDistricts = ["Väster", "Öster", "Tändsticksområdet", "Atollen", null];
 
-// API route setup to READ stores
+// READ - API route setup
 app.get('/api/stores', async (req, res) => {
     try {
         const stores = await getAllStores();
@@ -56,13 +56,22 @@ app.get('/api/stores', async (req, res) => {
 // Send POST request to CREATE a store
 app.post('/api/stores', async (req, res) => {
     const { name, url, district } = req.body;
-    if (!name) return res.status(400).json({ error: "Name is required" });
+
+    if (!name) { 
+        return res.status(400).json({ error: "Name is required" });
+    }
+    if (district && !validDistricts.includes(district)) {
+        return res.status(400).json({ error: "Invalid district" });
+    }
 
     try {
-        await client.query('INSERT INTO Stores (name, url, district) VALUES ($1, $2, $3)', [name, url, district]);
-        res.status(201).json({ message: "Store added successfully" });
+        const result = await pool.query('INSERT INTO Stores (name, url, district) VALUES ($1, $2, $3) RETURNING *', [name, url, district]);
+        res.status(201).json({ 
+            message: 'Store added successfully', 
+            store: result.rows[0] 
+        });
     } catch (err) {
-        res.status(500).json({ error: "Failed to add store" });
+        res.status(500).json({ error: 'Failed to add store' });
     }
 });
 
@@ -73,11 +82,10 @@ app.put('/api/stores/:id', async (req, res) => {
 
     if (!name || !url || !validDistricts.includes(district)) {
         return res.status(400).json({ error: "All fields are required" });
-    } 
-    
+    }
     try {
-        const result = await client.query(
-            'UPDATE Stores SET name = $1, url = $2, district = $3 WHERE id = $4',
+        const result = await pool.query(
+            'UPDATE Stores SET name = $1, url = $2, district = $3 WHERE id = $4 RETURNING *',
             [name, url, district, id]
         );
 
@@ -85,7 +93,7 @@ app.put('/api/stores/:id', async (req, res) => {
             return res.status(404).json({ error: "Store not found" });
         }
 
-        res.json({ message: "Store updated successfully" });
+        res.json({ message: "Store updated successfully", store: result.rows[0] });
     } catch (err) {
         console.error("Error updating store:", err);
         res.status(500).json({ error: "Failed to update store" });
@@ -97,13 +105,13 @@ app.delete('/api/stores/:id', async (req, res) => {
     const { id } = req.params;
 
     try {
-        const result = await client.query('DELETE FROM Stores WHERE id = $1', [id]);
+        const result = await pool.query('DELETE FROM Stores WHERE id = $1 RETURNING *', [id]);
 
         if (result.rowCount === 0) {
             return res.status(404).json({ error: "Store not found" });
         }
 
-        res.json({ message: "Store deleted successfully" });
+        res.json(result.rows[0], { message: "Store deleted successfully" });
     } catch (err) {
         console.error("Error deleting store:", err);
         res.status(500).json({ error: "Failed to delete store" });
@@ -117,12 +125,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('/public', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
-
 app.get('/', (req, res) => {
     res.send('Server is running. Welcome to JkpgCity!');
 });
 
-app.get('/favicon.ico', (req, res) => res.status(204)); // Ignore Favicon request (Provided by ChatGPT)
+// Ignore Favicon request
+app.get('/favicon.ico', (req, res) => res.status(204));
 
 app.listen(PORT, () => {
     console.log(`Server listening on http://localhost:${PORT}`);
