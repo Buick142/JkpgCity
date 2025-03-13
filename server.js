@@ -12,7 +12,10 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Ensure table Stores is created before running the database
-createTableStores();
+// Table Stores is only created once
+(async () => {
+    await createTableStores();
+})();
 
 // Array of valid district options
 const validDistricts = ["Väster", "Öster", "Tändsticksområdet", "Atollen", null];
