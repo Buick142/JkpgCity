@@ -87,16 +87,13 @@ app.put('/api/stores/:id', async (req, res) => {
         return res.status(400).json({ error: "All fields are required" });
     }
     try {
-        const result = await pool.query(
-            'UPDATE Stores SET name = $1, url = $2, district = $3 WHERE id = $4 RETURNING *',
-            [name, url, district, id]
-        );
+        const result = await pool.query('UPDATE Stores SET name = $1, url = $2, district = $3 WHERE id = $4 RETURNING *', [name, url, district, id]);
 
         if (result.rowCount === 0) {
             return res.status(404).json({ error: "Store not found" });
         }
 
-        res.json({ store: result.rows[0] , message: "Store deleted successfully" });
+        res.json({ store: result.rows[0] , message: "Store updated successfully" });
     } catch (err) {
         console.error("Error updating store:", err);
         res.status(500).json({ error: "Failed to update store" });

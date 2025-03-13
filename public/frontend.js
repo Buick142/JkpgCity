@@ -41,14 +41,20 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         if (target.classList.contains('delete-btn')) {
             await deleteStore(id);
-        } else if (target.classList.contains('edit-btn')) {
+            return;
+        } 
+        
+        if (target.classList.contains('edit-btn')) {
             const name = target.getAttribute('data-name');
             const url = target.getAttribute('data-url');
             const district = target.getAttribute('data-district');
             await editStore(id, name, url, district);
+            return;
         }
+
     });
 
+    // DELETE STORE
     async function deleteStore(id) {
         if (confirm("Are you sure you want to delete this store?")) {
             try {
@@ -64,6 +70,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
+    // UPDATE STORE
     async function editStore(id, name, url, district) {
         const newName = prompt("Edit store name:", name);
         const newUrl = prompt("Edit store URL:", url);
